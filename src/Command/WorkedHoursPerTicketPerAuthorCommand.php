@@ -135,7 +135,7 @@ class WorkedHoursPerTicketPerAuthorCommand extends Command
                 $worklog_array = $worklog_result->getResult();
                 if (isset($worklog_array["worklogs"]) && !empty($worklog_array["worklogs"])) {
                     foreach ($worklog_array["worklogs"] as $entry) {
-                        $author = $entry["author"]["key"];
+                        $author = $entry["author"]["displayName"];
 
                         // Filter on author
                         if ($input->getOption("authors-whitelist")) {

@@ -81,7 +81,7 @@ class WorkedHoursPerDayCommand extends Command
         $end_timestamp = mktime(23, 59, 59, $end_time_obj->format("m"), $end_time_obj->format("d"), $end_time_obj->format("Y"));
 
         if (!file_exists($input->getOption("config-file"))) {
-            $output->writeln("<error>Could not find config file at " . $input->getOption("config-file") . "</error>");
+            $output->writeln("<error>Could not find config file at " . realpath($input->getOption("config-file")). "</error>");
             die();
         }
 
@@ -104,7 +104,6 @@ class WorkedHoursPerDayCommand extends Command
         $worked_time = [];
 
         do {
-
             $jql = "worklogDate <= " . $end_time . " and worklogDate >= " . $start_time . " and timespent > 0  and timeSpent < " . rand(1000000, 9000000) . " ";
 
             if ($input->getOption("labels-whitelist")) {
@@ -131,22 +130,14 @@ class WorkedHoursPerDayCommand extends Command
             // For each issue in the result, fetch the full worklog
             $issues = $search_result->getIssues();
             foreach ($issues as $issue) {
-
-                $labels = $issue->getFields()["Labels"];
-                if (isset($labels_whitelist)) {
-                    $labels = array_intersect($labels, $labels_whitelist);
-                }
-
-                if (count($labels) > 1) {
-                    $output->write("<error>" . $issue . " has multiple labels: " . implode(", ", $labels) . "</error>");
-                }
+                $label = $issue->getKey();
 
                 $worklog_result = $jira->getWorklogs($issue->getKey(), []);
 
                 $worklog_array = $worklog_result->getResult();
                 if (isset($worklog_array["worklogs"]) && !empty($worklog_array["worklogs"])) {
                     foreach ($worklog_array["worklogs"] as $entry) {
-                        $author = $entry["author"]["key"];
+                        $author = $entry["author"]["displayName"];
 
                         // Filter on author
                         if ($input->getOption("authors-whitelist")) {
@@ -164,9 +155,7 @@ class WorkedHoursPerDayCommand extends Command
                             continue;
                         }
 
-                        foreach ($labels as $label) {
-                            @$worked_time[$label][$author][$worklog_date->format("Y-m-d")] += $entry["timeSpentSeconds"] / 60;
-                        }
+                        @$worked_time[$author][$worklog_date->format("Y-m-d")][$label] += $entry["timeSpentSeconds"] / 60;
                     }
                 }
                 $progress->advance();
@@ -183,7 +172,7 @@ class WorkedHoursPerDayCommand extends Command
         }
 
         $writer = new XLSXWriter();
-        $writer->setAuthor("Munisense BV");
+        $writer->setAuthor("");
 
         ksort($worked_time);
 
@@ -195,7 +184,7 @@ class WorkedHoursPerDayCommand extends Command
 
             $writer->writeSheetHeader($label, $sheet_headers);
 
-            $totals_row = [""];
+            $totals_row = ["Total (h): "];
             for ($i = 1; $i < count($sheet_headers); $i++) {
                 $totals_row[] = "=ROUND(SUM(" . XLSXWriter::xlsCell(2, $i) . ":" . XLSXWriter::xlsCell(10000, $i) . ")/60,0)";
             }
@@ -207,6 +196,7 @@ class WorkedHoursPerDayCommand extends Command
         }
 
         $writer->writeToFile($input->getOption("output-file"));
+        $output->writeln("<info>Report generated at " . realpath($input->getOption("output-file")) . "</info>");
     }
 
     /**
@@ -218,7 +208,7 @@ class WorkedHoursPerDayCommand extends Command
     {
         // Find unique authors per label
         $unique_authors = array_keys($worked_time_label);
-        $sheet_headers = ["Date" => "date"];
+        $sheet_headers = [" " => "string"];
         foreach ($unique_authors as $unique_author) {
             $sheet_headers[$unique_author] = "integer";
         }
