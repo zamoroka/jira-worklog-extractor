@@ -8,29 +8,16 @@ Currently outputs a CSV table with the projects on the rows, authors on the colu
 # Usage
 
 ```
-composer require jpastoor/jira-worklog-extractor dev-master@dev
+git clone https://github.com/zamoroka/jira-worklog-extractor.git
 ```
 
-Copy the config.json.template to config.json and alter the values.
+- Copy the `config.json.template` to `config.json` and alter the values.
+- Add [API token](https://id.atlassian.com/manage/api-tokens) into the `password` node
 
 To run it:
 ````bash
-php app.php load-project-totals 2016-01-01 2016-03-31
+php app.php worked-hours-per-day 2020-02-17 2020-02-24
 ````
-
-Example command:
-````bash
-php app.php load-project-totals 2016-01-01 2016-03-31
-````
-
-Example output:
-````bash
-project;matthijs;jeroen;chris;ernst;joost
-WGF;52;0;1;20;7
-WATSAFEGBS;0;0;9;0;0
-WAT;119;0;0;7;39
-````
-
 
 # License
 
