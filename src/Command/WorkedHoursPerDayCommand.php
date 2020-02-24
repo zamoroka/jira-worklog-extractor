@@ -186,7 +186,7 @@ class WorkedHoursPerDayCommand extends Command
 
             $totals_row = ["Total (h): "];
             for ($i = 1; $i < count($sheet_headers); $i++) {
-                $totals_row[] = "=ROUND(SUM(" . XLSXWriter::xlsCell(2, $i) . ":" . XLSXWriter::xlsCell(10000, $i) . ")/60,0)";
+                $totals_row[] = "=ROUND(SUM(" . XLSXWriter::xlsCell(2, $i) . ":" . XLSXWriter::xlsCell(10000, $i) . ")/60,2)";
             }
             $writer->writeSheetRow($label, $totals_row);
 
@@ -210,7 +210,7 @@ class WorkedHoursPerDayCommand extends Command
         $unique_authors = array_keys($worked_time_label);
         $sheet_headers = [" " => "string"];
         foreach ($unique_authors as $unique_author) {
-            $sheet_headers[$unique_author] = "integer";
+            $sheet_headers[$unique_author] = "string";
         }
         $unique_authors_map = array_flip($unique_authors);
 
